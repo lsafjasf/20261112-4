@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="低轨碎片回收模拟：确定性物理、固定种子、轨迹回放与故障恢复审计。"
+    />
+    <title>轨道回收 / ORBITAL SALVAGE 550</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main id="app" aria-label="轨道回收模拟器">
+      <canvas id="game" aria-label="轨道回收游戏场景"></canvas>
+
+      <div class="vignette" aria-hidden="true"></div>
+      <div class="scanlines" aria-hidden="true"></div>
+
+      <header class="topbar hud">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <div>
+            <strong>ORBITAL SALVAGE</strong>
+            <span>KESTREL-550 / 低轨回收任务</span>
+          </div>
+        </div>
+        <div class="top-metrics">
+          <div class="metric">
+            <span>种子</span>
+            <strong id="seed-readout">0550</strong>
+          </div>
+          <div class="metric">
+            <span>任务钟</span>
+            <strong id="time-readout">00:00.0</strong>
+          </div>
+          <div class="metric">
+            <span>步进</span>
+            <strong id="tick-readout">000000</strong>
+          </div>
+          <button id="audio-toggle" class="icon-button" aria-label="切换声音" title="M / 声音">
+            <span id="audio-icon">◖</span>
+          </button>
+        </div>
+      </header>
+
+      <aside class="mission-panel hud">
+        <div class="panel-heading">
+          <span class="eyebrow">MISSION // 04</span>
+          <span id="mission-state" class="state-pill active">作业中</span>
+        </div>
+        <h1>回收四块轨道碎片</h1>
+        <p class="mission-copy">
+          接近目标并锁定机械臂。将每个碎片拖回母站释放，避开卫星通行带与红色禁航区。
+        </p>
+        <div class="cargo-list" id="cargo-list"></div>
+        <div class="delivery-track">
+          <span>母站交付</span>
+          <div class="delivery-dots" id="delivery-dots"></div>
+          <strong id="delivery-count">0 / 4</strong>
+        </div>
+      </aside>
+
+      <aside class="telemetry-panel hud">
+        <div class="panel-heading">
+          <span class="eyebrow">FLIGHT TELEMETRY</span>
+          <span id="lock-state" class="lock-chip">ARM 待命</span>
+        </div>
+        <div class="fuel-block">
+          <div class="meter-label">
+            <span>推进剂</span>
+            <strong id="fuel-readout">100.0%</strong>
+          </div>
+          <div class="meter-track"><i id="fuel-meter"></i></div>
+        </div>
+        <div class="telemetry-grid">
+          <div><span>总质量</span><strong id="mass-readout">1,200 kg</strong></div>
+          <div><span>转矩惯量</span><strong id="inertia-readout">780k</strong></div>
+          <div><span>线加速度</span><strong id="accel-readout">50.0</strong></div>
+          <div><span>角加速度</span><strong id="angular-readout">3.59</strong></div>
+          <div><span>速度</span><strong id="speed-readout">0.0 m/s</strong></div>
+          <div><span>碰撞</span><strong id="collision-readout">0 / 3</strong></div>
+        </div>
+        <div class="wind-row">
+          <span class="wind-dot"></span>
+          <span>太阳风</span>
+          <strong id="wind-readout">平静</strong>
+          <span class="wind-arrow" id="wind-arrow">→</span>
+        </div>
+        <div class="control-buttons">
+          <button id="pause-button" title="P / 暂停">暂停</button>
+          <button id="step-button" title=". / 单步">单步</button>
+          <button id="reset-button" title="R / 重置">重置</button>
+        </div>
+      </aside>
+
+      <section class="bottom-dock hud">
+        <div class="control-hint">
+          <kbd>W</kbd><kbd>S</kbd><span>推进</span>
+          <kbd>A</kbd><kbd>D</kbd><span>转向</span>
+          <kbd>E</kbd><span>捕获</span>
+          <kbd>Q</kbd><span>释放</span>
+        </div>
+        <div class="dock-actions">
+          <button id="replay-button" class="action-button">轨迹回放</button>
+          <button id="mission-demo-button" class="action-button">通关演示</button>
+          <button id="audit-button" class="action-button">运行审计</button>
+          <button id="failure-drill-button" class="action-button danger">失败演练</button>
+        </div>
+        <div class="audit-summary" id="audit-summary">
+          <span class="summary-light"></span>
+          <div><span>确定性审计</span><strong id="audit-summary-text">等待运行</strong></div>
+        </div>
+      </section>
+
+      <div class="toast" id="toast" role="status"></div>
+
+      <div class="modal-backdrop" id="outcome-modal" hidden>
+        <section class="modal-card" id="outcome-card" aria-modal="true" role="dialog">
+          <span class="modal-kicker" id="outcome-kicker">MISSION STATUS</span>
+          <h2 id="outcome-title">任务中止</h2>
+          <p id="outcome-copy"></p>
+          <div class="modal-stats">
+            <div><span>确认原因</span><strong id="outcome-reason">—</strong></div>
+            <div><span>剩余燃料</span><strong id="outcome-fuel">—</strong></div>
+            <div><span>已交付</span><strong id="outcome-delivery">—</strong></div>
+          </div>
+          <div class="modal-actions">
+            <button id="outcome-reset" class="action-button">重置并恢复</button>
+            <button id="outcome-replay" class="action-button">查看轨迹</button>
+            <button id="outcome-audit" class="action-button">查看审计</button>
+          </div>
+        </section>
+      </div>
+
+      <div class="audit-drawer" id="audit-drawer" hidden>
+        <section class="audit-sheet" role="dialog" aria-modal="true" aria-label="确定性审计报告">
+          <header class="audit-header">
+            <div>
+              <span class="eyebrow">DETERMINISM / RECOVERY AUDIT</span>
+              <h2>固定种子实验报告</h2>
+              <p id="audit-subtitle">正在核对任务链、拖带参数、失败复现与恢复残留…</p>
+            </div>
+            <div class="audit-badge" id="audit-badge">RUNNING</div>
+            <button id="audit-close" class="icon-button" aria-label="关闭审计">×</button>
+          </header>
+          <div id="audit-content">
+            <div class="audit-footer">审计在页面内以无渲染模式运行，不会改动当前游戏状态。</div>
+          </div>
+        </section>
+      </div>
+
+      <div class="replay-bar hud" id="replay-bar" hidden>
+        <div class="replay-heading">
+          <span class="eyebrow">TRAJECTORY REPLAY</span>
+          <strong id="replay-title">固定种子轨迹</strong>
+        </div>
+        <button id="replay-play" class="icon-button" aria-label="播放或暂停回放">Ⅱ</button>
+        <input id="replay-slider" type="range" min="0" max="0" value="0" aria-label="回放进度" />
+        <div class="replay-meta">
+          <span id="replay-time">00:00.0</span>
+          <select id="replay-speed" aria-label="回放速度">
+            <option value="1">1×</option>
+            <option value="4" selected>4×</option>
+            <option value="12">12×</option>
+          </select>
+          <button id="replay-close" class="icon-button" aria-label="关闭回放">×</button>
+        </div>
+      </div>
+    </main>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
