@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="沙漠边缘天文台的观测排程模拟：安排指向、滤光片与穹顶，在沙尘抵达前采集两组数据。"
+    />
+    <title>Quebrada 04 · 沙尘窗口观测排程</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23080a0b'/%3E%3Cpath d='M5 25h22M10 25l6-15 6 15M13 19h6' stroke='%23e8a45f' stroke-width='2'/%3E%3Ccircle cx='24' cy='8' r='2' fill='%23e8a45f'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="fonts.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 44 44" fill="none">
+              <circle cx="22" cy="22" r="16" stroke="currentColor" stroke-opacity=".38" />
+              <path d="M11 29h22M16 29l7-13 7 13M18.5 24h7" stroke="currentColor" stroke-width="1.5" />
+              <circle cx="30.5" cy="12" r="2.4" fill="currentColor" />
+            </svg>
+          </div>
+          <div>
+            <div class="eyebrow">QUEBRADA 04 / ATACAMA</div>
+            <h1>沙尘窗口</h1>
+          </div>
+          <span class="sector-chip">SECTOR W-04</span>
+        </div>
+
+        <div class="storm-clock">
+          <div class="storm-copy">
+            <span class="eyebrow">DUST FRONT / 沙尘前锋</span>
+            <strong id="stormEta">T– 01:32</strong>
+          </div>
+          <div class="storm-track" aria-hidden="true">
+            <span id="stormFill"></span>
+            <i class="storm-front"></i>
+          </div>
+          <span class="storm-state" id="stormState">稳定</span>
+        </div>
+
+        <div class="top-actions">
+          <button class="audio-button" id="audioButton" type="button" aria-pressed="false">
+            <span class="audio-glyph" aria-hidden="true">
+              <i></i><i></i><i></i><i></i>
+            </span>
+            <span id="audioLabel">启用声场</span>
+          </button>
+          <div class="utc">
+            <span class="eyebrow">LOCAL / CLST</span>
+            <strong id="localClock">23:41:08</strong>
+          </div>
+        </div>
+      </header>
+
+      <main class="dashboard">
+        <aside class="panel plan-panel">
+          <div class="panel-heading">
+            <div>
+              <span class="eyebrow">01 / PLAN</span>
+              <h2>观测排程</h2>
+            </div>
+            <span class="micro-badge" id="planRevision">REV. 01</span>
+          </div>
+
+          <div class="scenario-switch" role="group" aria-label="天气场景">
+            <button class="scenario-option active" type="button" data-scenario="standard">
+              <span>标准窗口</span>
+              <small>前锋 01:32</small>
+            </button>
+            <button class="scenario-option" type="button" data-scenario="early">
+              <span>提前沙尘</span>
+              <small>前锋 00:52</small>
+            </button>
+          </div>
+
+          <section class="program-card" data-group="A">
+            <div class="program-head">
+              <div class="group-index">A</div>
+              <div>
+                <span class="eyebrow">GROUP A / 深空窄带</span>
+                <strong id="targetAName">船底座星云</strong>
+              </div>
+              <span class="program-status" id="programAStatus">PLANNED</span>
+            </div>
+            <div class="field-row">
+              <label for="targetA">指向目标</label>
+              <select id="targetA">
+                <option value="carina">NGC 3372 · 船底座</option>
+                <option value="vela">Vela SNR · 船帆座</option>
+              </select>
+            </div>
+            <div class="filter-field">
+              <span>滤光片</span>
+              <div class="filter-options" id="filterA" role="group" aria-label="A 组滤光片">
+                <button type="button" data-filter="ha" class="active">Hα</button>
+                <button type="button" data-filter="o3">OIII</button>
+                <button type="button" data-filter="b">B</button>
+              </div>
+            </div>
+            <div class="exposure-field">
+              <div class="field-line">
+                <label for="exposureA">积分时长</label>
+                <output id="exposureAValue">20s</output>
+              </div>
+              <input id="exposureA" type="range" min="14" max="30" step="1" value="20" />
+            </div>
+            <div class="program-meta">
+              <label class="toggle">
+                <input id="focusA" type="checkbox" checked />
+                <span></span>温度补偿
+              </label>
+              <span id="windowA">可拍 36°–64°</span>
+            </div>
+          </section>
+
+          <section class="program-card" data-group="B">
+            <div class="program-head">
+              <div class="group-index">B</div>
+              <div>
+                <span class="eyebrow">GROUP B / 发射线复合</span>
+                <strong id="targetBName">三叶星云</strong>
+              </div>
+              <span class="program-status" id="programBStatus">PLANNED</span>
+            </div>
+            <div class="field-row">
+              <label for="targetB">指向目标</label>
+              <select id="targetB">
+                <option value="trifid">M20 · 三叶星云</option>
+                <option value="eagle">M16 · 鹰状星云</option>
+              </select>
+            </div>
+            <div class="filter-field">
+              <span>滤光片</span>
+              <div class="filter-options" id="filterB" role="group" aria-label="B 组滤光片">
+                <button type="button" data-filter="ha">Hα</button>
+                <button type="button" data-filter="o3" class="active">OIII</button>
+                <button type="button" data-filter="b">B</button>
+              </div>
+            </div>
+            <div class="exposure-field">
+              <div class="field-line">
+                <label for="exposureB">积分时长</label>
+                <output id="exposureBValue">20s</output>
+              </div>
+              <input id="exposureB" type="range" min="14" max="30" step="1" value="20" />
+            </div>
+            <div class="program-meta">
+              <label class="toggle">
+                <input id="focusB" type="checkbox" checked />
+                <span></span>温度补偿
+              </label>
+              <span id="windowB">可拍 38°–68°</span>
+            </div>
+          </section>
+
+          <div class="dome-row">
+            <div>
+              <span class="eyebrow">DOME / 穹顶</span>
+              <strong id="domeState">预设闭合</strong>
+            </div>
+            <button class="dome-toggle" id="domeToggle" type="button" aria-pressed="false">
+              <span></span>
+              <b>OPEN</b>
+            </button>
+          </div>
+
+          <div class="command-grid">
+            <button class="command primary" id="startButton" type="button">
+              <span class="command-icon play"></span>
+              <span>执行排程<small>RUN SEQUENCE</small></span>
+            </button>
+            <button class="command" id="pauseButton" type="button" disabled>
+              <span class="command-icon pause"></span>
+              <span>暂停<small>PAUSE</small></span>
+            </button>
+            <button class="command" id="stepButton" type="button" disabled>
+              <span class="command-icon step"></span>
+              <span>单步<small>+0.5 SEC</small></span>
+            </button>
+            <button class="command danger" id="resetButton" type="button">
+              <span class="command-icon reset"></span>
+              <span>重置<small>RESET</small></span>
+            </button>
+          </div>
+        </aside>
+
+        <section class="stage-column">
+          <div class="scene-card">
+            <canvas id="sceneCanvas" aria-label="天文台、星空、沙尘与望远镜光路动画"></canvas>
+            <div class="scene-grain" aria-hidden="true"></div>
+            <div class="scene-corner corner-tl">LIVE OPTICS / 04</div>
+            <div class="scene-corner corner-tr">
+              <span class="live-dot"></span>
+              <span id="sceneMode">STANDBY</span>
+            </div>
+            <div class="scene-location">
+              <span class="eyebrow">TELESCOPE AZ / ALT</span>
+              <strong id="telescopeCoords">AZ 212.0° · ALT 56.9°</strong>
+            </div>
+            <div class="scene-conditions">
+              <div><span>温度</span><strong id="tempReadout">+4.4°</strong></div>
+              <div><span>风速</span><strong id="windReadout">5.2 m/s</strong></div>
+              <div><span>粉尘</span><strong id="dustReadout">0.0%</strong></div>
+              <div><span>对焦</span><strong id="focusReadout">0.00 µm</strong></div>
+            </div>
+            <div class="storm-alert" id="stormAlert" hidden>
+              <span>DUST FRONT</span>
+              <strong>沙尘前锋抵达</strong>
+              <small>保护逻辑已接管</small>
+            </div>
+            <div class="active-task">
+              <div class="active-task-head">
+                <span class="eyebrow">ACTIVE TASK</span>
+                <span id="taskTime">--</span>
+              </div>
+              <strong id="activeTaskLabel">待命 / 光路关闭</strong>
+              <div class="task-progress"><span id="taskProgressBar"></span></div>
+            </div>
+            <div class="scene-readout">
+              <span>OPTICAL PATH</span>
+              <strong id="opticalPathState">SEALED</strong>
+            </div>
+          </div>
+
+          <section class="timeline-card">
+            <div class="timeline-head">
+              <div>
+                <span class="eyebrow">02 / MISSION TIME</span>
+                <strong id="missionClock">00:00.0</strong>
+              </div>
+              <div class="timeline-meta">
+                <span id="timelineMode">READY</span>
+                <span class="speed-chip">4.0×</span>
+              </div>
+            </div>
+            <div class="timeline-body">
+              <div class="timeline-labels">
+                <span>00:00</span><span>00:30</span><span>01:00</span><span>01:30</span><span>02:00</span>
+              </div>
+              <div class="timeline-tracks" id="timelineTracks">
+                <div class="timeline-grid" aria-hidden="true"></div>
+                <div class="storm-marker" id="stormMarker" aria-hidden="true">
+                  <span>DUST</span>
+                </div>
+                <div class="playhead" id="playhead"><i></i></div>
+              </div>
+              <div class="timeline-legend">
+                <span><i class="motion"></i>转台 / 滤片</span>
+                <span><i class="focus"></i>对焦</span>
+                <span><i class="exposure"></i>曝光</span>
+                <span><i class="fault"></i>保护停机</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="verification-card">
+            <div class="verification-head">
+              <div>
+                <span class="eyebrow">03 / REPLAY LAB</span>
+                <h2>确定性与恢复验证</h2>
+              </div>
+              <span class="micro-badge" id="verificationBadge">NOT RUN</span>
+            </div>
+            <div class="verification-actions">
+              <button id="repeatButton" type="button">
+                <span class="verify-icon repeat"></span>
+                同输入连续运行 ×2
+              </button>
+              <button id="faultButton" type="button">
+                <span class="verify-icon fault"></span>
+                沙尘中止 + 恢复观察
+              </button>
+            </div>
+            <div class="verification-results" id="verificationResults">
+              <div class="verify-result muted">
+                <span>任务序列</span><strong>—</strong><small>等待回放</small>
+              </div>
+              <div class="verify-result muted">
+                <span>资源轨迹</span><strong>—</strong><small>等待回放</small>
+              </div>
+              <div class="verify-result muted">
+                <span>最终结果</span><strong>—</strong><small>等待回放</small>
+              </div>
+              <div class="verify-result muted">
+                <span>恢复观察</span><strong>—</strong><small>12.0s 固定窗口</small>
+              </div>
+            </div>
+            <div class="verification-detail" id="verificationDetail">
+              <p id="verificationCopy">使用当前排程执行两次独立回放，比较任务序列、资源采样与最终验收。</p>
+              <button class="text-button" id="snapshotButton" type="button" hidden>查看故障前后快照</button>
+            </div>
+          </section>
+        </section>
+
+        <aside class="right-column">
+          <section class="status-card panel">
+            <div class="status-topline">
+              <span class="eyebrow">MISSION STATE</span>
+              <span class="state-light" id="stateLight"></span>
+            </div>
+            <strong class="state-title" id="stateTitle">待命</strong>
+            <p id="stateSubtitle">穹顶闭合，排程等待执行。</p>
+            <div class="status-rule"></div>
+            <div class="status-mini-grid">
+              <div><span>任务</span><strong id="taskCounter">00 / 08</strong></div>
+              <div><span>设备</span><strong id="equipmentState">NOMINAL</strong></div>
+              <div><span>记录</span><strong id="recordState">0 / 2</strong></div>
+            </div>
+          </section>
+
+          <section class="data-card panel">
+            <div class="panel-heading compact">
+              <div>
+                <span class="eyebrow">DELIVERABLES</span>
+                <h2>两组数据验收</h2>
+              </div>
+              <span class="micro-badge">TARGET ≥ 78%</span>
+            </div>
+            <div class="data-group" data-group="A">
+              <div class="data-group-head">
+                <span class="data-letter">A</span>
+                <strong id="recordATitle">船底座星云</strong>
+                <span id="recordAState">待采集</span>
+              </div>
+              <div class="metric-line">
+                <span>曝光</span>
+                <div class="mini-bar"><i id="exposureFillA"></i><b></b></div>
+                <strong id="exposureMetricA">0 / 18s</strong>
+              </div>
+              <div class="metric-line">
+                <span>清晰度</span>
+                <div class="mini-bar teal"><i id="clarityFillA"></i><b></b></div>
+                <strong id="clarityMetricA">— / 78%</strong>
+              </div>
+            </div>
+            <div class="data-group" data-group="B">
+              <div class="data-group-head">
+                <span class="data-letter">B</span>
+                <strong id="recordBTitle">三叶星云</strong>
+                <span id="recordBState">待采集</span>
+              </div>
+              <div class="metric-line">
+                <span>曝光</span>
+                <div class="mini-bar"><i id="exposureFillB"></i><b></b></div>
+                <strong id="exposureMetricB">0 / 18s</strong>
+              </div>
+              <div class="metric-line">
+                <span>清晰度</span>
+                <div class="mini-bar teal"><i id="clarityFillB"></i><b></b></div>
+                <strong id="clarityMetricB">— / 78%</strong>
+              </div>
+            </div>
+          </section>
+
+          <section class="resource-card panel">
+            <div class="panel-heading compact">
+              <div>
+                <span class="eyebrow">SYSTEM RESOURCES</span>
+                <h2>设备遥测</h2>
+              </div>
+              <span class="resource-sample" id="resourceSample">LIVE</span>
+            </div>
+            <div class="resource-meter">
+              <div class="resource-meter-head">
+                <span>电机磨损</span>
+                <strong id="wearValue">0.0%</strong>
+              </div>
+              <div class="wear-track"><span id="wearFill"></span><i></i><i></i><i></i></div>
+              <small>风沙会加速转台与滤光轮磨损 · 硬限位 100%</small>
+            </div>
+            <div class="resource-row">
+              <div>
+                <span>电池</span>
+                <strong id="powerValue">100.0%</strong>
+                <div class="thin-track"><i id="powerFill"></i></div>
+              </div>
+              <div>
+                <span>科学数据</span>
+                <strong id="dataValue">0.0 MB</strong>
+                <div class="thin-track blue"><i id="dataFill"></i></div>
+              </div>
+            </div>
+            <div class="telemetry-grid">
+              <div><span>环境温度</span><b id="telemetryTemp">+4.4°C</b></div>
+              <div><span>阵风</span><b id="telemetryWind">5.2 m/s</b></div>
+              <div><span>粉尘密度</span><b id="telemetryDust">0.0%</b></div>
+              <div><span>焦面偏差</span><b id="telemetryFocus">0.00 µm</b></div>
+            </div>
+          </section>
+
+          <section class="log-card panel">
+            <div class="panel-heading compact">
+              <div>
+                <span class="eyebrow">EVENT STREAM</span>
+                <h2>运行记录</h2>
+              </div>
+              <span class="log-count" id="logCount">01</span>
+            </div>
+            <div class="event-log" id="eventLog" aria-live="polite"></div>
+          </section>
+        </aside>
+      </main>
+    </div>
+
+    <dialog class="snapshot-dialog" id="snapshotDialog">
+      <div class="dialog-head">
+        <div>
+          <span class="eyebrow">FAULT AUDIT / IMMUTABLE</span>
+          <h2>沙尘故障前后快照</h2>
+        </div>
+        <button id="closeSnapshot" type="button" aria-label="关闭">×</button>
+      </div>
+      <div class="snapshot-grid" id="snapshotGrid"></div>
+      <div class="dialog-foot" id="snapshotFooter"></div>
+    </dialog>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
