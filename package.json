@@ -1,0 +1,15 @@
+{
+  "name": "asm2d-animation-fsm",
+  "version": "1.0.0",
+  "description": "二维程序化角色动画状态机（待机/移动/受击/攻击）",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test:node": "node test/node-runner.mjs",
+    "test:browser": "node test/browser-e2e.mjs",
+    "test": "node test/node-runner.mjs && node test/browser-e2e.mjs"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^25.17.0"
+  }
+}

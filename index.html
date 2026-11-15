@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>二维角色动画状态机 · ASM2D</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f172a'/%3E%3Ccircle cx='16' cy='11' r='5' fill='%237dd3fc'/%3E%3Cpath d='M16 17v9M10 21l6-4 6 4' stroke='%23fcd34d' stroke-width='2.5' stroke-linecap='round' fill='none'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>二维角色动画状态机</h1>
+    <p class="sub">待机 / 移动 / 受击 / 攻击 · 帧线 · 事件点音效 · JSON 工程 · 局部脏区刷新</p>
+  </header>
+
+  <main class="layout">
+    <section class="panel stage-panel">
+      <div class="toolbar" id="controls">
+        <button data-input="moveStart">开始移动</button>
+        <button data-input="moveEnd">停止移动</button>
+        <button data-input="attack">攻击</button>
+        <button data-input="hit">受击</button>
+      </div>
+      <canvas id="stage" width="640" height="360"></canvas>
+      <div class="toolbar">
+        <button id="btn-roundtrip">保存 → 重新载入 → 跑连续切换链</button>
+        <button id="btn-dirty">局部更新实验（改 idle.fps）</button>
+        <button id="btn-restore">一键恢复默认</button>
+        <button id="btn-save">导出 JSON</button>
+        <label class="file-btn">导入 JSON<input type="file" id="file-import" accept="application/json"></label>
+        <button id="btn-mute">静音</button>
+      </div>
+      <div id="flash" class="flash"></div>
+    </section>
+
+    <section class="panel">
+      <h3>算法状态摘要</h3>
+      <div id="summary" class="summary"></div>
+      <h3>切换规则（算法摘要）</h3>
+      <ul class="rules">
+        <li>移动在 attack 的 <b>charge/strike</b> 仅登记 pendingMove；进入 <b>recovery</b> 立即打断为 move。</li>
+        <li>受击可打断 idle/move；蓄力期受击被阻挡并记录 <code>hitBlocked</code>。</li>
+        <li>进入新状态速度先归零，过渡按 blend 插值，杜绝上一动作位移残留。</li>
+        <li>同状态帧推进只刷脏区；状态/视图/参数变化才全量重绘，场景节点恒为 7 不重建。</li>
+      </ul>
+      <h3>可视化对照参数</h3>
+      <div id="view-options" class="view-opts">
+        <label><input type="checkbox" data-view="frameLines" checked> 帧线</label>
+        <label><input type="checkbox" data-view="grid" checked> 网格</label>
+        <label><input type="checkbox" data-view="eventMarkers" checked> 事件标记</label>
+        <label><input type="checkbox" data-view="ghost" checked> 过渡残影</label>
+        <label>主色 <input type="color" data-view="tint" value="#7dd3fc"></label>
+      </div>
+      <h3>事件 / 过渡日志</h3>
+      <div id="audio-log" class="log"></div>
+    </section>
+
+    <section class="panel wide">
+      <h3>状态参数编辑（帧率 / 过渡时间 / 事件点）</h3>
+      <div id="editors" class="editors"></div>
+    </section>
+
+    <section class="panel wide">
+      <div id="chain-output" class="muted">点击上方“保存 → 重新载入”按钮后展示连续状态切换链。</div>
+    </section>
+
+    <section class="panel wide">
+      <div id="test-output" class="muted">测试报告（普通 / 边界 / 失败三类场景）将在此渲染。</div>
+      <div id="hash-output"></div>
+      <div id="dirty-output"></div>
+      <div id="verdict" class="verdict">尚未运行验证。</div>
+    </section>
+  </main>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
