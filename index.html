@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#06151d">
+  <title>城市水务联合调度中心</title>
+  <link rel="preload" href="./assets/NotoSansSC-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="./src/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark"><span></span><span></span><span></span></div>
+        <div>
+          <h1>暴雨联合调度台</h1>
+          <p>4 泵站 · 3 蓄水池 · 6H 关键设施保护演练</p>
+        </div>
+      </div>
+      <div class="topbar-clock">
+        <span class="eyebrow">SIM CLOCK</span>
+        <strong id="simClock">00:00:00</strong>
+      </div>
+      <div class="transport">
+        <button id="pauseBtn" class="transport-button primary" type="button">暂停</button>
+        <button id="stepBtn" class="transport-button" type="button">单步 +30s</button>
+        <button id="resetBtn" class="transport-button danger" type="button">重置</button>
+        <label class="speed-control">
+          <span>速度</span>
+          <select id="speedSelect">
+            <option value="1">1×</option>
+            <option value="2" selected>2×</option>
+            <option value="4">4×</option>
+            <option value="8">8×</option>
+          </select>
+        </label>
+        <button id="soundBtn" class="icon-button active" type="button" aria-label="切换声音">声音开</button>
+        <span id="runStatus" class="status-pill running">运行中</span>
+      </div>
+    </header>
+
+    <main class="main-grid">
+      <section class="canvas-card">
+        <canvas id="networkCanvas" aria-label="城市水务管网实时监控画布"></canvas>
+        <div class="canvas-caption">
+          <span>管网压力色带</span>
+          <span class="caption-separator"></span>
+          <span>水面随湿井与蓄水池水位变化</span>
+          <span class="caption-separator"></span>
+          <span>泵流虚线表示实际流量</span>
+        </div>
+      </section>
+
+      <aside class="control-rail">
+        <section class="panel scenario-panel">
+          <div class="panel-heading">
+            <span>演练场景</span>
+            <span class="micro-tag">REPLAYABLE</span>
+          </div>
+          <select id="scenarioSelect" class="wide-select"></select>
+          <p id="scenarioDescription" class="panel-note"></p>
+          <div class="scenario-meta">
+            <span>固定步长 30s</span>
+            <span>指令带执行延迟</span>
+          </div>
+        </section>
+
+        <section class="panel kpi-panel">
+          <div class="kpi">
+            <span>降雨强度</span>
+            <strong id="kpiRain">--</strong>
+            <small>mm/h</small>
+          </div>
+          <div class="kpi">
+            <span>总泵流</span>
+            <strong id="kpiPumpFlow">--</strong>
+            <small>m³/s</small>
+          </div>
+          <div class="kpi">
+            <span>净水厂进水</span>
+            <strong id="kpiWtp">--</strong>
+            <small>m³/s</small>
+          </div>
+          <div class="kpi">
+            <span>恢复观察</span>
+            <strong id="kpiWatch">未触发</strong>
+            <small id="kpiWatchDetail">30 min</small>
+          </div>
+        </section>
+
+        <section class="panel control-panel">
+          <div class="panel-heading">
+            <span>泵站调速</span>
+            <span class="micro-tag">45–60s 延迟</span>
+          </div>
+          <div id="pumpControls" class="pump-controls"></div>
+        </section>
+
+        <section class="panel control-panel">
+          <div class="panel-heading">
+            <span>蓄水调度</span>
+            <span class="micro-tag" id="priorityLabel">优先级 R2 → R3 → R1</span>
+          </div>
+          <div id="reservoirControls" class="reservoir-controls"></div>
+        </section>
+
+        <section class="panel emergency-panel">
+          <div class="panel-heading">
+            <span>应急处置</span>
+            <span id="burstState" class="micro-tag">无爆管</span>
+          </div>
+          <div class="emergency-actions">
+            <button id="isolateBtn" type="button" disabled>隔离爆管段</button>
+            <button id="repairBtn" type="button" disabled>启动修复</button>
+          </div>
+          <p class="panel-note">隔离后泵流进入重路由；修复完成后启动固定 30 分钟观察窗。</p>
+        </section>
+      </aside>
+    </main>
+
+    <section class="audit-grid">
+      <article class="panel event-panel">
+        <div class="panel-heading">
+          <span>事件与指令序列</span>
+          <span id="eventCount" class="micro-tag">0 EVENTS</span>
+        </div>
+        <div id="eventFeed" class="event-feed" aria-live="polite"></div>
+      </article>
+
+      <article class="panel result-panel">
+        <div class="panel-heading">
+          <span>结果 / 重规划验证</span>
+          <span id="resultBadge" class="result-badge neutral">进行中</span>
+        </div>
+        <div id="resultBody" class="result-body">
+          <p class="empty-state">完成 6 小时演练后显示关键设施、故障快照和恢复观察结论。</p>
+        </div>
+        <div id="verificationBox" class="verification-box hidden"></div>
+        <div class="export-actions">
+          <button id="verifyBtn" type="button">同输入双跑校验</button>
+          <button id="csvBtn" type="button">导出站点摘要 CSV</button>
+          <button id="auditBtn" type="button">导出审计 JSON</button>
+        </div>
+      </article>
+    </section>
+    <footer class="footer">
+      <span>失败场景可重复：爆管未处置会在关键街区进水时立即失败。</span>
+      <span>Canvas 2D · Web Audio · deterministic 30s engine</span>
+    </footer>
+  </div>
+
+  <script type="module" src="./src/app.js"></script>
+</body>
+</html>
