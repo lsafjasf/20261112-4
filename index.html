@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>瓦片地图渲染器 · 固定种子</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 13px/1.5 "PingFang SC", "Microsoft YaHei", sans-serif;
+         background: #1e2126; color: #d7dce2; display: flex; height: 100vh; overflow: hidden; }
+  #map-wrap { flex: 1; position: relative; }
+  #map { width: 100%; height: 100%; display: block; cursor: grab; }
+  #map:active { cursor: grabbing; }
+  #hud { position: absolute; left: 10px; top: 10px; background: rgba(20,22,26,.82);
+         padding: 6px 10px; border-radius: 6px; font-size: 12px; pointer-events: none;
+         white-space: pre; }
+  #panel { width: 340px; overflow-y: auto; background: #262a31; padding: 12px;
+           border-left: 1px solid #3a3f47; }
+  fieldset { border: 1px solid #3a3f47; border-radius: 6px; margin: 0 0 10px; padding: 8px 10px; }
+  legend { color: #8ab4f8; padding: 0 4px; }
+  label.row { display: flex; align-items: center; gap: 6px; margin: 4px 0; }
+  label.row span { width: 96px; color: #9aa4b0; flex: none; }
+  input[type=range] { flex: 1; }
+  input[type=number] { width: 70px; background: #1a1d22; color: #d7dce2;
+                       border: 1px solid #3a3f47; border-radius: 4px; padding: 2px 4px; }
+  .val { width: 48px; text-align: right; color: #7fb069; font-family: monospace; }
+  button { background: #33415c; color: #e8edf3; border: 1px solid #46587a; border-radius: 5px;
+           padding: 5px 10px; margin: 2px 4px 2px 0; cursor: pointer; }
+  button:hover { background: #3e4f70; }
+  button.warn { background: #5c3333; border-color: #7a4646; }
+  .layers label { margin-right: 10px; }
+  pre { background: #1a1d22; border-radius: 5px; padding: 8px; font-size: 11px;
+        max-height: 220px; overflow: auto; white-space: pre-wrap; word-break: break-all; }
+  #test-results div { padding: 1px 4px; font-family: monospace; font-size: 11px; }
+  .pass { color: #7fb069; } .fail { color: #e06c75; }
+  #consistency { font-weight: bold; }
+</style>
+</head>
+<body>
+  <div id="map-wrap">
+    <canvas id="map"></canvas>
+    <div id="hud"></div>
+  </div>
+  <div id="panel">
+    <fieldset class="layers">
+      <legend>图层</legend>
+      <label><input type="checkbox" data-layer="terrain" checked> 地形</label>
+      <label><input type="checkbox" data-layer="water" checked> 水网</label>
+      <label><input type="checkbox" data-layer="roads" checked> 道路</label>
+      <label><input type="checkbox" data-layer="labels" checked> 文字</label>
+    </fieldset>
+    <fieldset>
+      <legend>视角（拖拽平移 / 滚轮缩放 / Q、E 旋转）</legend>
+      <label class="row"><span>缩放 zoom</span>
+        <input type="range" id="zoom" min="0.5" max="8" step="0.01"><b class="val" id="zoom-v"></b></label>
+      <label class="row"><span>旋转 rotation</span>
+        <input type="range" id="rot" min="-180" max="180" step="1"><b class="val" id="rot-v"></b></label>
+    </fieldset>
+    <fieldset>
+      <legend>生成参数（改动仅重建受影响图层）</legend>
+      <label class="row"><span>种子 seed</span>
+        <input type="number" id="p-seed" step="1"></label>
+      <label class="row"><span>水位 waterLevel</span>
+        <input type="range" id="p-waterLevel" min="0.2" max="0.7" step="0.01"><b class="val"></b></label>
+      <label class="row"><span>河流 riverLevel</span>
+        <input type="range" id="p-riverLevel" min="0.01" max="0.15" step="0.005"><b class="val"></b></label>
+      <label class="row"><span>道路 roadDensity</span>
+        <input type="range" id="p-roadDensity" min="0" max="1" step="0.05"><b class="val"></b></label>
+      <label class="row"><span>文字 labelDensity</span>
+        <input type="range" id="p-labelDensity" min="0" max="1" step="0.05"><b class="val"></b></label>
+      <label class="row"><span>城市 cityCount</span>
+        <input type="range" id="p-cityCount" min="4" max="200" step="1"><b class="val"></b></label>
+      <button id="apply-params">应用参数</button>
+      <button id="reset-params" class="warn">恢复默认参数</button>
+    </fieldset>
+    <fieldset>
+      <legend>快照 / 导出</legend>
+      <button id="save-snap">保存快照</button>
+      <button id="restore-snap">一键恢复</button>
+      <button id="export-hi">导出 2x 高清截图</button>
+    </fieldset>
+    <fieldset>
+      <legend>算法状态摘要</legend>
+      <pre id="state-summary">—</pre>
+    </fieldset>
+    <fieldset>
+      <legend>测量结果</legend>
+      <pre id="metrics">—</pre>
+    </fieldset>
+    <fieldset>
+      <legend>场景测试（普通 / 边界 / 失败）</legend>
+      <button id="run-tests">运行测试</button>
+      <div id="test-results"></div>
+      <div id="consistency"></div>
+    </fieldset>
+  </div>
+  <script src="engine.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
