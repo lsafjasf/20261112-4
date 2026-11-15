@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>地震救援调度模拟</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: #0c111c;
+      color: #dfe6f5;
+      display: flex;
+      min-height: 100vh;
+    }
+    .stage { flex: 1; padding: 16px; }
+    canvas {
+      width: 100%;
+      max-width: 900px;
+      background: #111726;
+      border: 1px solid #2a3349;
+      border-radius: 10px;
+      display: block;
+    }
+    .controls {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    button, select {
+      background: #243049;
+      color: #dfe6f5;
+      border: 1px solid #3a4763;
+      border-radius: 6px;
+      padding: 8px 14px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    button:hover { background: #2f3e5e; }
+    button.primary { background: #2f6f4f; border-color: #3f8f68; }
+    button.danger { background: #7a3535; border-color: #9a4545; }
+    .side {
+      width: 360px;
+      padding: 16px;
+      background: #101828;
+      border-left: 1px solid #2a3349;
+      overflow-y: auto;
+    }
+    h2 { font-size: 15px; margin: 18px 0 8px; color: #9fc1ff; }
+    h2:first-child { margin-top: 4px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th, td {
+      padding: 5px 4px;
+      border-bottom: 1px solid #232d42;
+      text-align: left;
+    }
+    th { color: #8aa0c6; font-weight: 600; }
+    .state-line { font-size: 13px; margin: 6px 0; }
+    .state-line b { color: #ffd166; }
+    ul#eventLog {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      font-size: 12px;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+    ul#eventLog li {
+      padding: 5px 6px;
+      border-bottom: 1px solid #1d273b;
+    }
+    .tick { color: #7f93b8; font-family: monospace; }
+    .legend {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+    .legend span::before {
+      content: "";
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 4px;
+    }
+    .legend .red::before { background: #e05252; }
+    .legend .yellow::before { background: #e8b53a; }
+    .legend .green::before { background: #4caf6d; }
+    .legend .block::before { background: #b23b3b; border-radius: 0; }
+    .hint { font-size: 12px; color: #8aa0c6; margin-top: 8px; line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <canvas id="map" width="900" height="600"></canvas>
+    <div class="legend">
+      <span class="red">红色危重伤员</span>
+      <span class="yellow">黄色中重伤员</span>
+      <span class="green">绿色轻伤员</span>
+      <span class="block">红色虚线：余震阻断道路</span>
+    </div>
+    <div class="controls">
+      <button id="btnStart" class="primary">开始</button>
+      <button id="btnPause">暂停</button>
+      <button id="btnStep">单步</button>
+      <button id="btnReset" class="danger">重置</button>
+      <label>速度
+        <input id="speedRange" type="range" min="1" max="20" value="4" />
+        <span id="speedLabel">4x</span>
+      </label>
+      <select id="scenarioSelect">
+        <option value="win">胜利场景（良好调度）</option>
+        <option value="fail">失败场景（资源错配）</option>
+        <option value="recovery">恢复场景（余震重算+清障）</option>
+      </select>
+      <button id="btnMute">静音</button>
+    </div>
+    <p class="hint">
+      一 tick 等于模拟一秒，任务时限 1200 tick（20 分钟）。固定随机种子
+      20261112 决定三次余震顺序：t120 断 e4、t480 断 e8、t780 断 e5。
+      场景脚本完全确定，重置后重放结果一致。
+    </p>
+  </div>
+
+  <aside class="side">
+    <h2>运行状态</h2>
+    <p class="state-line">当前：<b id="runState">已重置 / 暂停</b></p>
+    <p class="state-line">医疗点床位：<b id="bedState"></b></p>
+    <p class="state-line">余震记录：<b id="faultState"></b></p>
+
+    <h2>资源状态</h2>
+    <table>
+      <thead>
+        <tr><th>单位</th><th>模式</th><th>位置</th><th>乘员</th><th>重算</th><th>闲置</th></tr>
+      </thead>
+      <tbody id="resourceRows"></tbody>
+    </table>
+
+    <h2>事件日志（最近 12 条）</h2>
+    <ul id="eventLog"></ul>
+  </aside>
+
+  <script src="src/simulation.js"></script>
+  <script src="src/scenarios.js"></script>
+  <script src="src/audio.js"></script>
+  <script src="src/app.js"></script>
+</body>
+</html>

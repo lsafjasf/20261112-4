@@ -1,0 +1,12 @@
+{
+  "name": "earthquake-rescue-sim",
+  "version": "1.0.0",
+  "description": "Deterministic earthquake rescue dispatch simulation with Canvas UI and Web Audio",
+  "private": true,
+  "scripts": {
+    "test": "node tests/verify.js && node tests/dom-smoke.js",
+    "verify": "node tests/verify.js",
+    "dom-smoke": "node tests/dom-smoke.js",
+    "audit": "node tests/audit-output.js"
+  }
+}
