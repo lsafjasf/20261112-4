@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="海岸迁徙监测站：管理三台录音器与航拍机，完成清晰录音、有效航迹和零惊扰监测。"
+    />
+    <title>潮汐守夜 · 海岸迁徙监测站</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23071820' stroke='%2354e7c3'/%3E%3Cpath d='M6 23c5-2 7-8 9-11 2 4 4 7 8 7 2 0 4-1 5-3-1 5-6 8-12 7-4-1-6-2-10-4Z' fill='%2354e7c3'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="atmosphere" aria-hidden="true">
+      <div class="aurora aurora-a"></div>
+      <div class="aurora aurora-b"></div>
+      <div class="noise"></div>
+    </div>
+
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 40 40"><path d="M5 30c7-2 9-9 12-14 3 5 4 9 8 11 3 1 7 0 10-3-2 8-8 12-15 11-6-1-9-3-15-5Z"/><circle cx="31" cy="10" r="3"/></svg>
+        </span>
+        <div>
+          <p class="eyebrow">COASTAL MIGRATION WATCH</p>
+          <h1>潮汐守夜</h1>
+        </div>
+      </div>
+      <div class="mission-title">
+        <span class="live-dot" id="missionLiveDot"></span>
+        <div>
+          <p>迁徙夜监测 · 第 <strong id="tickNow">0</strong> / <span id="tickTotal">14</span> 段</p>
+          <small id="missionStatus">待规划</small>
+        </div>
+      </div>
+      <div class="header-meter" aria-label="快速状态">
+        <div><span>风级</span><strong id="windNow">0</strong></div>
+        <div><span>惊扰</span><strong id="disturbNow">0</strong></div>
+        <div><span>任务</span><strong id="goalNow">0 / 5</strong></div>
+      </div>
+      <div class="header-actions">
+        <span class="save-state" id="saveState"><i></i>设备状态自动保存</span>
+        <button class="ghost-btn" id="audioBtn" type="button" aria-pressed="false">
+          <span class="wave-icon" aria-hidden="true">≋</span> 开启声场
+        </button>
+      </div>
+    </header>
+
+    <main class="game-shell">
+      <aside class="panel fleet-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">CONTROL DECK</p>
+            <h2>设备调度</h2>
+          </div>
+          <span class="panel-tag">3R + 1D</span>
+        </div>
+
+        <section class="scenario-card" aria-labelledby="scenarioTitle">
+          <div class="scenario-heading">
+            <div>
+              <span class="micro-label">监测方案</span>
+              <strong id="scenarioTitle">平稳夜航</strong>
+            </div>
+            <span class="scenario-code" id="scenarioCode">CLM-00</span>
+          </div>
+          <select id="scenarioSelect" aria-label="选择监测方案">
+            <option value="calm">CLM-00 · 平稳夜航</option>
+            <option value="gust">GUST-01 · 侧风故障（可重复）</option>
+          </select>
+          <p id="scenarioDescription">轻风窗口，适合熟悉设备与航线。</p>
+          <div class="scenario-meta">
+            <span>种子 <b id="seedValue">20261112</b></span>
+            <button class="text-btn" id="loadScenarioBtn" type="button">载入并重置</button>
+          </div>
+        </section>
+
+        <section class="light-card" aria-labelledby="lightsTitle">
+          <div class="light-copy">
+            <div>
+              <span class="micro-label">岸站照明</span>
+              <strong id="lightsTitle">航标灯关闭</strong>
+            </div>
+            <span class="light-state" id="lightState">DARK</span>
+          </div>
+          <p>开启后鸟群偏离原航线，并立即计入惊扰。保持关闭才可能成功。</p>
+          <button class="light-toggle" id="lightsBtn" type="button" aria-pressed="false">
+            <span class="toggle-track"><i></i></span>
+            <span id="lightsBtnText">保持关闭</span>
+          </button>
+        </section>
+
+        <div class="device-list-heading">
+          <span class="micro-label">现场设备</span>
+          <span>点击设备后在地图选择落点</span>
+        </div>
+        <div class="device-list" id="deviceList"></div>
+      </aside>
+
+      <section class="map-column">
+        <div class="map-frame">
+          <canvas id="coastCanvas" width="1040" height="650" aria-label="海岸监测地图"></canvas>
+          <div class="map-overlay top-left">
+            <span class="map-live"><i></i> NIGHT OPS</span>
+            <span class="coast-label" id="focusLabel">选择一台设备查看覆盖</span>
+          </div>
+          <div class="map-overlay top-right">
+            <div class="wind-readout">
+              <span>侧风</span>
+              <strong id="windMap">0<small>级</small></strong>
+            </div>
+            <div class="next-wind">
+              <span>下一段</span>
+              <b id="nextWind">1 级</b>
+            </div>
+          </div>
+          <div class="map-overlay bottom-left map-legend">
+            <span><i class="legend-recorder"></i>录音覆盖</span>
+            <span><i class="legend-drone"></i>航拍覆盖</span>
+            <span><i class="legend-light"></i>照明扇区</span>
+            <span><i class="legend-track"></i>有效航迹</span>
+          </div>
+          <div class="map-overlay bottom-right">
+            <span class="map-hint" id="mapHint">选择设备以预览覆盖范围</span>
+          </div>
+        </div>
+
+        <div class="mission-goals" id="missionGoals">
+          <div class="goal-block">
+            <span class="goal-icon">◉</span>
+            <div><small>清晰录音</small><strong><b id="recGoal">0</b> / 3</strong></div>
+            <span class="goal-bar"><i id="recBar"></i></span>
+          </div>
+          <div class="goal-block">
+            <span class="goal-icon">⌁</span>
+            <div><small>有效航迹</small><strong><b id="trackGoal">0</b> / 2</strong></div>
+            <span class="goal-bar"><i id="trackBar"></i></span>
+          </div>
+          <div class="goal-block">
+            <span class="goal-icon">✦</span>
+            <div><small>零惊扰</small><strong id="disturbGoal">保持</strong></div>
+            <span class="goal-bar"><i id="disturbBar"></i></span>
+          </div>
+          <div class="goal-block recovery-goal" id="recoveryGoalBlock">
+            <span class="goal-icon">↻</span>
+            <div><small>恢复观察</small><strong id="recoveryGoal">待触发</strong></div>
+            <span class="goal-bar"><i id="recoveryBar"></i></span>
+          </div>
+        </div>
+
+        <div class="control-deck">
+          <div class="timeline">
+            <div class="timeline-copy">
+              <span class="micro-label">监测时间轴</span>
+              <span id="timelineText">规划第 1 段</span>
+            </div>
+            <div class="timeline-track" id="timelineTrack" aria-hidden="true"></div>
+          </div>
+          <div class="transport-controls">
+            <button class="control-btn" id="resetBtn" type="button">
+              <span aria-hidden="true">↺</span> 重置
+            </button>
+            <button class="control-btn" id="stepBtn" type="button">
+              <span aria-hidden="true">⇥</span> 单步
+            </button>
+            <button class="control-btn pause-btn" id="pauseBtn" type="button" aria-pressed="false">
+              <span aria-hidden="true">Ⅱ</span> 暂停
+            </button>
+            <button class="control-btn primary" id="runBtn" type="button">
+              <span aria-hidden="true">▶</span> 连续运行
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="panel data-panel">
+        <div class="panel-heading data-heading">
+          <div>
+            <p class="eyebrow">SIGNAL LAB</p>
+            <h2>数据质量</h2>
+          </div>
+          <span class="quality-pill" id="qualityPill">等待采样</span>
+        </div>
+
+        <nav class="tab-nav" aria-label="数据面板">
+          <button class="tab-btn active" data-tab="quality" type="button">质检</button>
+          <button class="tab-btn" data-tab="events" type="button">事件流 <b id="eventCount">0</b></button>
+          <button class="tab-btn" data-tab="verify" type="button">验收</button>
+        </nav>
+
+        <div class="tab-content active" id="qualityTab">
+          <div class="quality-summary">
+            <div class="quality-orbit"><span id="qualityScore">--</span><small>dB</small></div>
+            <div>
+              <strong id="qualityTitle">等待第一段录音</strong>
+              <p id="qualitySubtitle">每段自动检查风噪、信噪比与移动沉降。</p>
+            </div>
+          </div>
+          <div class="check-list" id="checkList"></div>
+          <div class="recording-grid" id="recordingGrid"></div>
+          <div class="track-card" id="trackCard"></div>
+          <div class="retake-card" id="retakeCard"></div>
+        </div>
+
+        <div class="tab-content" id="eventsTab">
+          <div class="event-toolbar">
+            <span>仅显示关键事件</span>
+            <button class="text-btn" id="clearEventFilter" type="button">全部</button>
+          </div>
+          <ol class="event-log" id="eventLog"></ol>
+        </div>
+
+        <div class="tab-content" id="verifyTab">
+          <div class="verify-intro">
+            <span class="micro-label">AUTOMATED PROOF</span>
+            <h3>可重复性验收台</h3>
+            <p>用相同输入连续运行两次，并另跑失败场景、噪声重采与固定恢复观察。</p>
+            <button class="verify-btn" id="runVerificationBtn" type="button">运行全部验收</button>
+          </div>
+          <div class="verify-results" id="verifyResults">
+            <div class="empty-proof">尚未运行。验收不会改变当前手动监测状态。</div>
+          </div>
+          <details class="evidence-json">
+            <summary>查看原始证据</summary>
+            <pre id="evidenceJson">等待生成</pre>
+          </details>
+        </div>
+      </aside>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div class="sr-only" id="screenReaderStatus" aria-live="assertive"></div>
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>
