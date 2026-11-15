@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Forge Inspector · Procedural WebGL</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='7' y='7' width='18' height='18' rx='3' fill='none' stroke='%2356d6c9' stroke-width='2' transform='rotate(45 16 16)'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <div>
+            <h1>FORGE INSPECTOR</h1>
+            <p>PROCEDURAL PARTS · LIVE CLIP · MATERIAL MASK</p>
+          </div>
+        </div>
+        <div class="topbar-meta">
+          <span id="engine-badge" class="status-pill neutral">WEBGL2 / NATIVE</span>
+          <span class="fps-pill"><b id="fps-top">--</b><small>FPS</small></span>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <aside class="panel controls-panel" aria-label="Scene controls">
+          <section class="card">
+            <div class="card-heading">
+              <span class="eyebrow">01 / MATERIAL MASK</span>
+              <span id="filter-count" class="count-badge">6 shown</span>
+            </div>
+            <div id="material-filter" class="segmented" role="group" aria-label="Material filter">
+              <button class="filter-btn active" data-filter="all">All</button>
+              <button class="filter-btn" data-filter="steel"><i class="dot steel"></i>Steel</button>
+              <button class="filter-btn" data-filter="painted"><i class="dot painted"></i>Painted</button>
+            </div>
+            <p class="hint">Filtering changes draw visibility only; mesh buffers stay resident.</p>
+          </section>
+
+          <section class="card">
+            <div class="card-heading">
+              <span class="eyebrow">02 / CLIP PLANE</span>
+              <label class="switch">
+                <input id="clip-enabled" type="checkbox" />
+                <span></span>
+              </label>
+            </div>
+            <div class="field-row">
+              <label for="clip-axis">Axis</label>
+              <select id="clip-axis">
+                <option value="x">X</option>
+                <option value="y" selected>Y</option>
+                <option value="z">Z</option>
+              </select>
+              <div id="clip-direction" class="mini-toggle" role="group" aria-label="Clip direction">
+                <button class="active" data-direction="1">+ keep</button>
+                <button data-direction="-1">− keep</button>
+              </div>
+            </div>
+            <div class="range-head">
+              <label for="clip-offset">Offset d</label>
+              <output id="clip-value">0.60 m</output>
+            </div>
+            <input id="clip-offset" class="range" type="range" min="-1.5" max="2.5" step="0.05" value="0.6" />
+            <div class="scale-labels"><span>−1.5</span><span>+2.5</span></div>
+            <p class="hint">Double-sided shading flips interior normals after either direction switch.</p>
+          </section>
+
+          <section class="card parts-card">
+            <div class="card-heading">
+              <span class="eyebrow">03 / PARTS</span>
+              <span id="hidden-count" class="count-badge muted">0 hidden</span>
+            </div>
+            <div id="part-list" class="part-list"></div>
+          </section>
+
+          <section class="card reference-card">
+            <div class="card-heading">
+              <span class="eyebrow">04 / REFERENCE</span>
+              <span class="mini-status">LOCKED</span>
+            </div>
+            <pre id="reference-params" class="code-block compact"></pre>
+            <button id="restore-reference" class="button secondary wide">Restore comparison profile</button>
+          </section>
+        </aside>
+
+        <section class="stage-column">
+          <div class="stage" id="stage">
+            <canvas id="gl" aria-label="Interactive 3D part inspector"></canvas>
+            <div class="stage-top-left">
+              <span id="view-label" class="stage-chip">ORBIT · ALL</span>
+              <span id="clip-label" class="stage-chip quiet">CLIP OFF</span>
+            </div>
+            <div class="stage-top-right">
+              <button id="reset-view" class="icon-button" title="Reset camera">⌂</button>
+            </div>
+            <div id="measurement-label" class="measurement-label hidden" aria-live="polite"></div>
+            <div id="toast" class="toast" role="status" aria-live="polite"></div>
+            <div class="stage-help">
+              <span><b>DRAG</b> orbit</span>
+              <span><b>WHEEL</b> zoom</span>
+              <span><b>CLICK</b> measure</span>
+            </div>
+          </div>
+          <div class="stage-footer">
+            <span id="frame-status">Frame 0 · waiting for first draw</span>
+            <span id="canvas-size">—</span>
+          </div>
+        </section>
+
+        <aside class="panel metrics-panel" aria-label="Live measurements">
+          <section class="card">
+            <div class="card-heading">
+              <span class="eyebrow">LIVE SCENE METRICS</span>
+              <span class="live-dot">LIVE</span>
+            </div>
+            <dl class="metric-grid">
+              <div><dt>Total parts</dt><dd id="m-total">6</dd></div>
+              <div><dt>Visible parts</dt><dd id="m-visible">6</dd></div>
+              <div><dt>Hidden / filtered</dt><dd id="m-hidden">0</dd></div>
+              <div><dt>Fully clipped</dt><dd id="m-clipped">0</dd></div>
+              <div><dt>Part draw calls</dt><dd id="m-draws">6</dd></div>
+              <div><dt>Visible triangles</dt><dd id="m-triangles">0</dd></div>
+              <div><dt>Frame time</dt><dd id="m-frame-time">0.0 ms</dd></div>
+              <div><dt>FPS</dt><dd id="m-fps">--</dd></div>
+            </dl>
+          </section>
+
+          <section class="card measurement-card">
+            <div class="card-heading">
+              <span class="eyebrow">MEASUREMENT</span>
+              <span id="selection-state" class="status-pill neutral">NONE</span>
+            </div>
+            <div id="selection-empty" class="empty-state">Click a visible part to measure its world bounds.</div>
+            <div id="selection-content" class="selection-content hidden">
+              <div class="part-title-row">
+                <div>
+                  <small id="sel-id">P-00</small>
+                  <h2 id="sel-name">Part</h2>
+                </div>
+                <span id="sel-material" class="material-tag">STEEL</span>
+              </div>
+              <div class="dimension-readout">
+                <span>W</span><strong id="sel-w">0.00</strong>
+                <span>H</span><strong id="sel-h">0.00</strong>
+                <span>D</span><strong id="sel-d">0.00</strong>
+                <small>metres · world AABB</small>
+              </div>
+              <dl class="detail-list">
+                <div><dt>Triangles</dt><dd id="sel-tris">0</dd></div>
+                <div><dt>Mesh hash</dt><dd id="sel-hash">—</dd></div>
+                <div><dt>Centre</dt><dd id="sel-center">—</dd></div>
+                <div><dt>Clip state</dt><dd id="sel-clip">—</dd></div>
+              </dl>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="card-heading">
+              <span class="eyebrow">ALGORITHM STATE</span>
+              <span id="update-mode" class="mini-status">INIT</span>
+            </div>
+            <pre id="algorithm-summary" class="code-block"></pre>
+          </section>
+
+          <section class="card consistency-card">
+            <div class="card-heading">
+              <span class="eyebrow">FRAME ↔ DATA</span>
+              <span id="consistency-badge" class="status-pill pass">CHECKING</span>
+            </div>
+            <ul id="consistency-checks" class="check-list"></ul>
+            <p id="consistency-note" class="consistency-note"></p>
+          </section>
+
+          <section class="card actions-card">
+            <div class="button-row">
+              <button id="export-png" class="button primary">Export view PNG</button>
+              <button id="recompute" class="button secondary">Recompute + verify</button>
+            </div>
+            <p id="action-status" class="action-status">Ready. Click a part to inspect it.</p>
+          </section>
+        </aside>
+      </main>
+
+      <div id="fatal" class="fatal hidden" role="alert">
+        <div class="fatal-card">
+          <span class="eyebrow">RENDERER UNAVAILABLE</span>
+          <h2 id="fatal-title">WebGL2 could not start</h2>
+          <p id="fatal-message"></p>
+          <button id="fatal-retry" class="button secondary">Retry</button>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="./src/app.mjs"></script>
+  </body>
+</html>
