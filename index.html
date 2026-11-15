@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>温控药品运输仿真</title>
+    <link rel="stylesheet" href="src/style.css" />
+  </head>
+  <body>
+    <main>
+      <h1>温控药品运输仿真</h1>
+      <p class="hint">
+        三种温控药品经拥堵路段与一次临时停电送达两家医院。开箱缩短保温、急刹损伤样本、
+        低电量制冷降功率；全部在温交付且备用路线记录完整即成功。
+      </p>
+
+      <section class="toolbar">
+        <label>seed <input id="seed" type="number" value="20261112" /></label>
+        <button id="reseed">按 seed 重建</button>
+        <span>状态：<b id="state"></b></span>
+        <span>队列：<b id="queue"></b></span>
+      </section>
+
+      <section class="toolbar">
+        <button id="play">运行/继续</button>
+        <button id="pause">暂停</button>
+        <button id="step">单步</button>
+        <button id="reset">重置</button>
+        <button id="driveMain">主路发车</button>
+        <button id="driveBackup">备用发车</button>
+        <button id="initAudio">激活音效</button>
+        <button id="mute">静音</button>
+      </section>
+
+      <section class="toolbar">
+        <label>
+          路线重排（逗号分隔，如 S1,H2）
+          <input id="reorder" type="text" value="H2,S1" size="10" />
+        </label>
+        <button id="applyReorder">应用重排</button>
+        <span id="actions" class="action-row"></span>
+      </section>
+
+      <canvas id="scene" width="760" height="520"></canvas>
+
+      <section>
+        <h2>事件日志</h2>
+        <textarea id="log" rows="12" readonly></textarea>
+      </section>
+
+      <section class="legend">
+        <h2>规则摘要</h2>
+        <ul>
+          <li>压缩机在温度触界时双向工作，电量 &lt;20% 进入低功率模式。</li>
+          <li>开箱立即扣减保温时间；保温耗尽后温度向环境（30℃）快速漂移。</li>
+          <li>拥堵路段急刹概率更高，累计损伤 100 判定样本损坏。</li>
+          <li>换电点停电期间无法换电/回充；同 seed 下所有事件逐位复现。</li>
+        </ul>
+      </section>
+    </main>
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,88 @@
+:root {
+  color-scheme: dark;
+  font-family: system-ui, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: #0d1220;
+  color: #e8ecf4;
+}
+
+body {
+  margin: 0;
+  padding: 20px;
+}
+
+main {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 22px;
+}
+
+.hint {
+  color: #aeb8cc;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin: 12px 0;
+}
+
+button {
+  background: #243049;
+  color: #e8ecf4;
+  border: 1px solid #3a4a6b;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+button:hover {
+  background: #2f3f5f;
+}
+
+input {
+  background: #1a2235;
+  border: 1px solid #3a4a6b;
+  border-radius: 5px;
+  color: #e8ecf4;
+  padding: 5px 8px;
+}
+
+#scene {
+  width: 100%;
+  max-width: 760px;
+  background: #111827;
+  border: 1px solid #2a3550;
+  border-radius: 10px;
+}
+
+.action-row {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  background: #0a0f1c;
+  border: 1px solid #2a3550;
+  border-radius: 8px;
+  color: #9fd8b8;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  padding: 10px;
+}
+
+.legend ul {
+  color: #aeb8cc;
+  font-size: 13px;
+  line-height: 1.7;
+}
