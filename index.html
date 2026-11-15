@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#071c25" />
+    <title>潮汐守望 · 海上养殖区调控台</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="ambient-grid" aria-hidden="true"></div>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 48 48">
+              <path d="M4 29c7-7 13-7 20 0s13 7 20 0" />
+              <path d="M4 37c7-7 13-7 20 0s13 7 20 0" />
+              <circle cx="24" cy="17" r="8" />
+            </svg>
+          </div>
+          <div>
+            <p class="eyebrow">TIDEWATCH / SEA FARM 03</p>
+            <h1>潮汐守望</h1>
+          </div>
+        </div>
+
+        <nav class="scenario-switch" aria-label="场景选择">
+          <span class="switch-label">场景</span>
+          <button class="scenario-button is-active" data-scenario="standard">
+            <span class="scenario-code">S-01</span>
+            常规调控
+          </button>
+          <button class="scenario-button" data-scenario="storm">
+            <span class="scenario-code">F-07</span>
+            强流破网
+          </button>
+        </nav>
+
+        <div class="mission-clock">
+          <span class="clock-label">养殖区时间</span>
+          <strong id="clockValue">06:00</strong>
+          <span id="clockDelta">T+00:00</span>
+        </div>
+
+        <div class="top-controls">
+          <button class="icon-button" id="audioButton" aria-label="开启环境声" title="环境声">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 9h3l4-4v14l-4-4H4z" />
+              <path class="sound-wave" d="M15 8c1.5 1 2 2.4 2 4s-.5 3-2 4M18 5c2.5 1.8 4 4.2 4 7s-1.5 5.2-4 7" />
+            </svg>
+            <span>环境声</span>
+          </button>
+          <button class="icon-button" id="auditButton" title="双跑一致性审计">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5" />
+            </svg>
+            <span>双跑审计</span>
+          </button>
+          <button class="control-button primary" id="playButton">
+            <svg class="play-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11L13 8z" /></svg>
+            <svg class="pause-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 3h3v10H4zM9 3h3v10H9z" /></svg>
+            <span id="playLabel">开始</span>
+          </button>
+          <button class="control-button" id="stepButton" title="单步推进 0.1 小时">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2.8v10.4L11 8zM12 2.8h2v10.4h-2z" /></svg>
+            单步
+          </button>
+          <button class="control-button" id="resetButton" title="重置当前场景">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.6 7A5.7 5.7 0 1 0 12 12M13 2v5H8" /></svg>
+            重置
+          </button>
+        </div>
+      </header>
+
+      <div class="timeline-strip">
+        <div class="timeline-meta">
+          <span id="scenarioName">常规午前调控</span>
+          <span id="scenarioNote">缓流 · 三箱协同</span>
+        </div>
+        <div class="timeline" aria-label="十二小时模拟进度">
+          <div class="timeline-fill" id="timelineFill"></div>
+          <div class="timeline-marker marker-now" id="timelineNow"></div>
+          <span class="timeline-tick" style="left: 0%">06:00</span>
+          <span class="timeline-tick" style="left: 25%">09:00</span>
+          <span class="timeline-tick" style="left: 50%">12:00</span>
+          <span class="timeline-tick" style="left: 75%">15:00</span>
+          <span class="timeline-tick" style="left: 100%">18:00</span>
+        </div>
+        <div class="timeline-status">
+          <span class="status-dot" id="runDot"></span>
+          <span id="runStatus">待命</span>
+          <span class="speed-label">速度</span>
+          <button class="speed-button is-active" data-speed="1">1×</button>
+          <button class="speed-button" data-speed="2">2×</button>
+          <button class="speed-button" data-speed="4">4×</button>
+        </div>
+      </div>
+
+      <main class="workspace">
+        <section class="scene-panel panel">
+          <div class="scene-header">
+            <div>
+              <span class="section-kicker">LIVE CROSS-SECTION</span>
+              <h2>三号养殖区 · 网箱剖面</h2>
+            </div>
+            <div class="sea-state">
+              <span>流速</span>
+              <strong id="currentValue">0.00</strong>
+              <span>m/s</span>
+              <i id="currentArrow">→</i>
+              <span id="tideLabel">平潮</span>
+            </div>
+          </div>
+          <div class="canvas-wrap" id="canvasWrap">
+            <canvas id="sceneCanvas"></canvas>
+            <div class="canvas-top-left">
+              <span class="live-badge"><i></i> 实时剖面</span>
+              <span class="canvas-clock" id="canvasClock">06:00</span>
+            </div>
+            <div class="canvas-top-right">
+              <div class="mini-metric">
+                <span>水交换</span>
+                <strong id="exchangeValue">0.00</strong>
+              </div>
+              <div class="mini-metric">
+                <span>流速状态</span>
+                <strong id="flowState">缓流</strong>
+              </div>
+            </div>
+            <div class="alarm-banner" id="alarmBanner" hidden>
+              <span class="alarm-pulse"></span>
+              <div>
+                <strong>网具破损告警</strong>
+                <p>三号箱网衣撕裂，任务已自动暂停</p>
+              </div>
+              <button id="alarmRepairButton">立即处置</button>
+            </div>
+            <div class="observation-banner" id="observationBanner" hidden>
+              <span>恢复观察窗</span>
+              <strong id="observationTime">2.0h</strong>
+              <div class="observation-track"><i id="observationFill"></i></div>
+            </div>
+            <div class="canvas-legend">
+              <span><i class="legend-dot oxygen"></i>增氧气泡</span>
+              <span><i class="legend-dot fouling"></i>网衣附着</span>
+              <span><i class="legend-dot pollution"></i>有机污染</span>
+              <span><i class="legend-dot current"></i>潮流</span>
+            </div>
+          </div>
+        </section>
+
+        <aside class="right-rail">
+          <section class="mission-card panel">
+            <div class="mission-card-head">
+              <div>
+                <span class="section-kicker">MISSION</span>
+                <h2>验收条件</h2>
+              </div>
+              <span class="mission-count" id="missionCount">0 / 6</span>
+            </div>
+            <div class="goal-row">
+              <span>鱼群健康度</span><strong>≥ 72</strong>
+            </div>
+            <div class="goal-row">
+              <span>有机污染</span><strong>≤ 42</strong>
+            </div>
+            <div class="goal-row">
+              <span>模拟窗口</span><strong>12.0 h</strong>
+            </div>
+            <p class="mission-hint" id="missionHint">先增氧并清洗老化网具，再按需定量投喂。</p>
+          </section>
+
+          <section class="cage-stack" id="cageStack" aria-label="网箱状态"></section>
+
+          <section class="resource-card panel">
+            <div class="panel-heading compact">
+              <h2>船队资源</h2>
+              <span>实时消耗</span>
+            </div>
+            <div class="resource-grid">
+              <div class="resource-row">
+                <span class="resource-icon power">P</span>
+                <div><span>电力</span><strong id="resourcePower">86.0</strong></div>
+                <div class="resource-bar"><i id="powerBar"></i></div>
+                <small>kWh</small>
+              </div>
+              <div class="resource-row">
+                <span class="resource-icon fuel">◈</span>
+                <div><span>船用燃油</span><strong id="resourceFuel">48.0</strong></div>
+                <div class="resource-bar"><i id="fuelBar"></i></div>
+                <small>L</small>
+              </div>
+              <div class="resource-row">
+                <span class="resource-icon feed">●</span>
+                <div><span>饲料</span><strong id="resourceFeed">34.0</strong></div>
+                <div class="resource-bar"><i id="feedBar"></i></div>
+                <small>kg</small>
+              </div>
+              <div class="resource-row">
+                <span class="resource-icon kit">+</span>
+                <div><span>修补包</span><strong id="resourceKits">2</strong></div>
+                <div class="resource-bar"><i id="kitsBar"></i></div>
+                <small>套</small>
+              </div>
+            </div>
+          </section>
+        </aside>
+      </main>
+
+      <section class="lower-deck">
+        <section class="control-deck panel">
+          <div class="panel-heading">
+            <div>
+              <span class="section-kicker">CONTROL DECK</span>
+              <h2>现场操作</h2>
+            </div>
+            <span class="delay-note">所有指令均有现场响应延迟</span>
+          </div>
+
+          <div class="action-grid">
+            <article class="action-module">
+              <div class="module-head">
+                <span class="module-index">01</span>
+                <div><h3>增氧机</h3><p>启动延迟 0.4 h</p></div>
+                <span class="cost-tag">1.35 kWh/h</span>
+              </div>
+              <div class="cage-action-row" id="aeratorActions"></div>
+            </article>
+
+            <article class="action-module">
+              <div class="module-head">
+                <span class="module-index">02</span>
+                <div><h3>清洗网具</h3><p>作业延迟 0.9 h</p></div>
+                <span class="cost-tag">3 kWh · 3.5 L</span>
+              </div>
+              <div class="cage-action-row" id="cleanActions"></div>
+            </article>
+
+            <article class="action-module feed-module">
+              <div class="module-head">
+                <span class="module-index">03</span>
+                <div><h3>投喂船</h3><p>航行延迟 0.6 h</p></div>
+                <span class="cost-tag">1 L / 航次</span>
+              </div>
+              <div class="feed-controls">
+                <label for="feedCage">目标</label>
+                <select id="feedCage">
+                  <option value="1">一号箱</option>
+                  <option value="2">二号箱</option>
+                  <option value="3">三号箱</option>
+                </select>
+                <div class="amount-switch" id="amountSwitch">
+                  <button class="is-active" data-amount="4">4 kg</button>
+                  <button data-amount="8">8 kg</button>
+                  <button data-amount="12">12 kg</button>
+                </div>
+                <button class="dispatch-button" id="feedButton">派出投喂船</button>
+              </div>
+              <p class="feed-advice" id="feedAdvice">建议 4 kg · 当前箱内余料 2.2 kg</p>
+            </article>
+
+            <article class="action-module emergency-module" id="emergencyModule">
+              <div class="module-head">
+                <span class="module-index">04</span>
+                <div><h3>应急修补</h3><p>抵达与封堵延迟 0.5 h</p></div>
+                <span class="cost-tag">1 套修补包</span>
+              </div>
+              <button class="emergency-button" id="repairButton" disabled>
+                <span class="emergency-light"></span>
+                <span id="repairButtonText">等待破损告警</span>
+              </button>
+              <p class="emergency-note">修补完成后自动进入 2 小时恢复观察。</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="activity-panel panel">
+          <div class="activity-tabs">
+            <button class="is-active" data-tab="queue">执行队列 <span id="queueCount">0</span></button>
+            <button data-tab="log">事件记录 <span id="logCount">0</span></button>
+          </div>
+          <div class="activity-body" id="queueView">
+            <div class="empty-state" id="queueEmpty">
+              <span class="empty-wave"></span>
+              <p>暂无在途指令</p>
+              <small>操作后将按现场延迟依次反馈</small>
+            </div>
+            <div class="queue-list" id="queueList"></div>
+          </div>
+          <div class="activity-body" id="logView" hidden>
+            <div class="log-list" id="logList"></div>
+          </div>
+          <button class="fault-record-link" id="faultRecordButton" hidden>
+            查看故障前后快照 <span>→</span>
+          </button>
+        </section>
+      </section>
+
+      <footer class="footer-bar">
+        <span>SEA FARM 03 · 潮汐决定水交换，强流威胁老旧网具</span>
+        <span><kbd>Space</kbd> 暂停 <kbd>←</kbd> 单步 <kbd>R</kbd> 重置</span>
+      </footer>
+    </div>
+
+    <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+    <dialog class="modal fault-modal" id="faultDialog">
+      <div class="modal-head danger-head">
+        <div>
+          <span class="section-kicker">EMERGENCY / NET-03-TEAR</span>
+          <h2>三号箱网衣撕裂</h2>
+          <p>强流撕开老化网衣，系统已自动暂停并记录故障前后状态。</p>
+        </div>
+        <button class="modal-close" data-close="faultDialog" aria-label="关闭">×</button>
+      </div>
+      <div class="fault-summary" id="faultSummary"></div>
+      <div class="fault-steps">
+        <span class="is-done">强流触发</span><i></i><span>应急修补</span><i></i><span>2 小时观察</span>
+      </div>
+      <div class="modal-actions">
+        <button class="text-button" data-close="faultDialog">稍后处理</button>
+        <button class="control-button primary" id="faultRepairAction">使用修补包</button>
+      </div>
+    </dialog>
+
+    <dialog class="modal audit-modal" id="auditDialog">
+      <div class="modal-head">
+        <div>
+          <span class="section-kicker">DETERMINISM AUDIT</span>
+          <h2>同一输入 · 连续双跑</h2>
+          <p id="auditSubtitle">使用完整调控方案，从头连续执行两次。</p>
+        </div>
+        <button class="modal-close" data-close="auditDialog" aria-label="关闭">×</button>
+      </div>
+      <div id="auditBody" class="audit-body"></div>
+      <div class="modal-actions">
+        <button class="text-button" id="exportAuditButton">导出 JSON 证据</button>
+        <button class="control-button primary" data-close="auditDialog">关闭</button>
+      </div>
+    </dialog>
+
+    <dialog class="modal result-modal" id="resultDialog">
+      <div class="modal-head" id="resultHead">
+        <div>
+          <span class="section-kicker">12-HOUR ACCEPTANCE</span>
+          <h2 id="resultTitle">任务结算</h2>
+          <p id="resultSubtitle"></p>
+        </div>
+        <button class="modal-close" data-close="resultDialog" aria-label="关闭">×</button>
+      </div>
+      <div id="resultBody" class="result-body"></div>
+      <div class="modal-actions">
+        <button class="text-button" data-close="resultDialog">查看现场</button>
+        <button class="control-button primary" id="resultResetButton">重置再试</button>
+      </div>
+    </dialog>
+
+    <dialog class="modal fault-modal" id="faultRecordDialog">
+      <div class="modal-head">
+        <div>
+          <span class="section-kicker">FAULT RECORD</span>
+          <h2>故障关键状态记录</h2>
+          <p>触发前后快照与恢复观察结果均保留在本次运行中。</p>
+        </div>
+        <button class="modal-close" data-close="faultRecordDialog" aria-label="关闭">×</button>
+      </div>
+      <div id="faultRecordBody"></div>
+    </dialog>
+
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>
