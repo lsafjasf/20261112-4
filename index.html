@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#050b10" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='14' fill='%23061016' stroke='%2372e7e1'/><circle cx='16' cy='16' r='5' fill='%2372e7e1'/></svg>" />
+    <title>黑水测绘 · ROV-07</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+          <div>
+            <div class="eyebrow">DEEP SALVAGE UNIT / 19-B</div>
+            <h1>黑水测绘 <span>BLACKWATER SURVEY</span></h1>
+          </div>
+        </div>
+
+        <div class="seed-cluster" aria-label="地图种子信息">
+          <div class="seed-chip"><span>SEED</span><strong id="seed-value">—</strong></div>
+          <div class="seed-chip"><span>LAYOUT</span><strong id="layout-hash">—</strong></div>
+          <div class="seed-chip reachable"><span>REACHABILITY</span><strong id="reachability">CHECKING</strong></div>
+        </div>
+
+        <div class="top-actions">
+          <div class="link-state" id="link-state"><i></i> TETHER LINK</div>
+          <button class="icon-button" id="pause-button" type="button" title="暂停 / 继续 (P)">
+            <span id="pause-icon">Ⅱ</span><span id="pause-label">暂停</span>
+          </button>
+          <button class="icon-button" id="step-button" type="button" title="单步 (.)">
+            <span>↦</span><span>单步</span>
+          </button>
+          <button class="icon-button" id="reset-button" type="button" title="重置 (R)">
+            <span>↺</span><span>重置</span>
+          </button>
+          <button class="icon-button sound-button" id="sound-button" type="button" title="声音开关">
+            <span id="sound-icon">◖</span><span>声呐音频</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section class="stage-card" aria-label="潜器测绘画布">
+          <canvas id="game-canvas"></canvas>
+
+          <div class="stage-scanlines" aria-hidden="true"></div>
+          <div class="corner corner-tl"></div>
+          <div class="corner corner-tr"></div>
+          <div class="corner corner-bl"></div>
+          <div class="corner corner-br"></div>
+
+          <div class="resource-panel glass-panel">
+            <div class="panel-heading">
+              <span>LIFE SUPPORT</span>
+              <b id="mission-phase">SURVEY</b>
+            </div>
+            <div class="resource-row" data-resource="oxygen">
+              <div class="resource-label"><span><i class="resource-dot oxygen"></i>氧气</span><strong id="oxygen-value">100%</strong></div>
+              <div class="bar"><i id="oxygen-bar"></i></div>
+            </div>
+            <div class="resource-row" data-resource="battery">
+              <div class="resource-label"><span><i class="resource-dot battery"></i>电池</span><strong id="battery-value">100%</strong></div>
+              <div class="bar"><i id="battery-bar"></i></div>
+            </div>
+            <div class="resource-row" data-resource="arm">
+              <div class="resource-label"><span><i class="resource-dot arm"></i>采样臂</span><strong id="arm-value">100%</strong></div>
+              <div class="bar"><i id="arm-bar"></i></div>
+            </div>
+            <div class="cog-row">
+              <span>重心偏移</span>
+              <div class="cog-track"><i id="cog-pin"></i><b id="cog-bar"></b></div>
+              <strong id="cog-value">0.0%</strong>
+            </div>
+            <div class="fault-strip" id="fault-strip">
+              <span class="pulse-dot"></span>
+              <b id="fault-code">NO ACTIVE FAULT</b>
+              <span id="fault-detail">所有系统稳定</span>
+            </div>
+          </div>
+
+          <div class="sonar-panel glass-panel">
+            <div class="sonar-orb" id="sonar-orb"><span>SCAN</span><b>READY</b></div>
+            <div class="sonar-stats">
+              <div><span>扫描次数</span><b id="scan-count">00</b></div>
+              <div><span>测绘精度</span><b id="scan-precision">48%</b></div>
+              <div><span>航速</span><b id="speed-value">0.0</b></div>
+            </div>
+          </div>
+
+          <div class="objective-panel glass-panel">
+            <div class="objective-head">
+              <div>
+                <span>MISSION SURVEY</span>
+                <b>沉船 19-B · 三件取样与安全返航</b>
+              </div>
+              <div class="objective-clock"><span>MISSION T+</span><b id="mission-time">00:00</b></div>
+            </div>
+            <div class="objective-grid">
+              <div class="artifact-list" id="artifact-list"></div>
+              <div class="survey-meters">
+                <div class="meter-cell">
+                  <span>船体测绘</span>
+                  <b id="hull-progress">0 / 12</b>
+                  <div class="mini-bar"><i id="hull-bar"></i></div>
+                </div>
+                <div class="meter-cell">
+                  <span>返航航线</span>
+                  <b id="route-progress">0 / 3</b>
+                  <div class="mini-bar route"><i id="route-bar"></i></div>
+                </div>
+                <div class="meter-cell">
+                  <span>返回母船</span>
+                  <b id="home-distance">— m</b>
+                  <div class="mini-bar home"><i id="home-bar"></i></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="control-hint">
+            <span><kbd>W</kbd><kbd>S</kbd> 推进</span>
+            <span><kbd>A</kbd><kbd>D</kbd> 转向</span>
+            <span><kbd>⇧</kbd> 增压近路</span>
+            <span><kbd>SPACE</kbd> 声呐</span>
+            <span><kbd>E</kbd> 取样</span>
+            <span><kbd>X</kbd> 紧急恢复</span>
+            <span><kbd>P</kbd> 暂停</span>
+            <span><kbd>.</kbd> 单步</span>
+          </div>
+
+          <div class="stage-banner" id="stage-banner" aria-live="polite">
+            <span class="banner-kicker" id="banner-kicker">SCENARIO</span>
+            <strong id="banner-title">等待下潜指令</strong>
+            <p id="banner-copy">声呐只能提供短暂轮廓。保持三项生命资源，完成三件取样。</p>
+            <button id="banner-action" type="button">开始测绘</button>
+          </div>
+
+          <div class="toast-stack" id="toast-stack"></div>
+        </section>
+
+        <aside class="side-column">
+          <section class="side-card audit-card">
+            <div class="side-heading">
+              <div><span>DETERMINISM LAB</span><h2>确定性审计台</h2></div>
+              <span class="status-pill" id="audit-status">READY</span>
+            </div>
+            <p class="side-copy">同一 seed 与同一输入序列执行两次，比对布局、任务序列、资源轨迹与最终结局。</p>
+            <div class="scenario-actions">
+              <button class="scenario-button danger" id="failure-run" type="button">
+                <span>01</span><div><b>三件取样 → 返航故障</b><small>完整失败流程 · 实际物理模拟</small></div><i>▶</i>
+              </button>
+              <button class="scenario-button warn" id="recovery-run" type="button">
+                <span>02</span><div><b>碰撞 → 恢复 → 观察 10s</b><small>前后状态快照 · 残留检查</small></div><i>▶</i>
+              </button>
+              <button class="scenario-button" id="double-run" type="button">
+                <span>03</span><div><b>同输入连续双跑</b><small>比较任务、资源与结局</small></div><i>⧉</i>
+              </button>
+            </div>
+            <div class="audit-checks" id="audit-checks">
+              <div><i></i><span>固定 seed 布局</span><b>待运行</b></div>
+              <div><i></i><span>三件取样完成</span><b>待运行</b></div>
+              <div><i></i><span>返航失败可复现</span><b>待运行</b></div>
+              <div><i></i><span>双跑轨迹一致</span><b>待运行</b></div>
+              <div><i></i><span>恢复后无残留</span><b>待运行</b></div>
+            </div>
+            <div class="audit-console" id="audit-console">
+              <div class="console-line"><span>SYS</span>等待审计指令…</div>
+            </div>
+          </section>
+
+          <section class="side-card mission-card">
+            <div class="side-heading">
+              <div><span>MISSION SEQUENCE</span><h2>任务序列</h2></div>
+              <span class="status-pill ghost" id="sequence-count">00 EVENTS</span>
+            </div>
+            <div class="sequence-list" id="sequence-list">
+              <div class="sequence-empty">尚未产生任务事件</div>
+            </div>
+          </section>
+
+          <section class="side-card fault-card">
+            <div class="side-heading">
+              <div><span>FAULT RECORDER</span><h2>故障前后快照</h2></div>
+              <span class="status-pill ghost" id="fault-count">0 FAULTS</span>
+            </div>
+            <div id="fault-recorder" class="fault-recorder">
+              <div class="record-empty">
+                <span>NO FAULT CAPTURED</span>
+                <p>碰撞或资源耗尽时，这里会冻结触发前后的关键状态。</p>
+              </div>
+            </div>
+          </section>
+        </aside>
+      </main>
+    </div>
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>
