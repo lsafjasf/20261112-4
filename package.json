@@ -1,0 +1,10 @@
+{
+  "name": "wildfire-sim",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Deterministic wildfire response simulation with Canvas rendering and Web Audio",
+  "scripts": {
+    "verify": "node test/verify.mjs && node test/smoke-ui.mjs",
+    "serve": "node tools/serve.mjs"
+  }
+}

@@ -1,0 +1,42 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: "Segoe UI", "PingFang SC", sans-serif;
+  background: #14181d;
+  color: #dfe6ee;
+  min-height: 100vh;
+}
+header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding: 10px 16px;
+  background: #1d232b;
+  border-bottom: 1px solid #2c3540;
+}
+header h1 { font-size: 18px; }
+#clock { font-variant-numeric: tabular-nums; color: #8fd3ff; font-size: 16px; }
+#status { margin-left: auto; color: #ffc857; }
+main { display: flex; gap: 12px; padding: 12px; align-items: flex-start; }
+#stage { flex: 0 0 auto; }
+#map { background: #0c0f12; border: 1px solid #2c3540; display: block; cursor: crosshair; }
+#hint { font-size: 12px; color: #8b98a5; padding-top: 6px; }
+aside { flex: 1 1 320px; max-width: 380px; display: flex; flex-direction: column; gap: 10px; }
+.group { background: #1d232b; border: 1px solid #2c3540; border-radius: 6px; padding: 10px; }
+.group h2 { font-size: 13px; color: #8fd3ff; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+.row { display: flex; gap: 8px; margin-bottom: 6px; align-items: center; flex-wrap: wrap; }
+button {
+  background: #2b6cb0; color: #fff; border: none; border-radius: 4px;
+  padding: 6px 10px; font-size: 13px; cursor: pointer;
+}
+button:hover { background: #3182ce; }
+button:disabled { background: #3a4550; cursor: not-allowed; }
+select, input[type="checkbox"] { accent-color: #2b6cb0; }
+#resources div, #env div { font-size: 13px; padding: 2px 0; font-variant-numeric: tabular-nums; }
+#log {
+  height: 180px; overflow-y: auto; font-size: 12px;
+  font-family: "Cascadia Code", Consolas, monospace;
+  background: #10141a; border-radius: 4px; padding: 6px;
+}
+#log .warn { color: #ff8a80; }
+#log .ok { color: #9ccc65; }
+#log .info { color: #8fd3ff; }

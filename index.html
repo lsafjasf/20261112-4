@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>山火扑救模拟 · Wildfire Response Sim</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header>
+    <h1>山火扑救模拟</h1>
+    <div id="clock">T+00:00</div>
+    <div id="status">就绪</div>
+  </header>
+
+  <main>
+    <section id="stage">
+      <canvas id="map" width="960" height="640"></canvas>
+      <div id="hint">左键: 指挥所选单位 · 拖动框选防火带 · 1/2 选水车 · 3 选无人机 · B 开挖模式</div>
+    </section>
+
+    <aside id="panel">
+      <div class="group">
+        <h2>模拟控制</h2>
+        <div class="row">
+          <button id="btnPause">暂停</button>
+          <button id="btnStep">单步</button>
+          <button id="btnReset">重置</button>
+        </div>
+        <div class="row">
+          <label>速度
+            <select id="speed">
+              <option value="1">1x</option>
+              <option value="4" selected>4x</option>
+              <option value="16">16x</option>
+              <option value="64">64x</option>
+            </select>
+          </label>
+          <label><input type="checkbox" id="audioOn"> 声音</label>
+        </div>
+      </div>
+
+      <div class="group">
+        <h2>场景回放(确定性)</h2>
+        <div class="row">
+          <button id="btnRunFail">失败场景: 错误开挖</button>
+          <button id="btnRunWin">成功场景: 标准扑救</button>
+        </div>
+        <div class="row">
+          <button id="btnVerify">连跑两次校验一致性</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <h2>资源状态</h2>
+        <div id="resources"></div>
+      </div>
+
+      <div class="group">
+        <h2>环境</h2>
+        <div id="env"></div>
+      </div>
+
+      <div class="group">
+        <h2>事件日志</h2>
+        <div id="log"></div>
+      </div>
+    </aside>
+  </main>
+
+  <script type="module" src="js/ui/main.js"></script>
+</body>
+</html>
